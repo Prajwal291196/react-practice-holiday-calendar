@@ -6,8 +6,10 @@ import axios from 'axios'
 import api, { COUNTRY_ENDPOINT, PUBLIC_HOLIDAYS_ENDPOINT } from './api'
 
 function App() {
-  const [selectedCountry, setSelectedCountry] = useState('Netherlands (the)')
+  const [selectedCountry, setSelectedCountry] = useState('NL')
   const [countryOptions, setCountryOptions] = useState([])
+  const [publicHolidays, setPublicHolidays] = useState([])
+
 
   useEffect(() => {
     console.log(`a`)
@@ -35,11 +37,12 @@ function App() {
           new Map(
             allCountyName.map(item => {
               return [
-                `${item.text}`, item,
+                `${item.text}-${item.language}`, item,
               ]
             })
           ).values()
         ).sort((a, b) => a.text.localeCompare(b.text))
+        console.log(`unoique`, unique)
         setCountryOptions(unique)
 
       }
@@ -48,25 +51,47 @@ function App() {
       }
     }
     fetchOpenHolidays();
+    fetchedCalendar('NL','NL')
   }, [])
   console.log(`countryOptions`, countryOptions)
 
-  // useEffect(() => {
-  //   const fetchedCalendar = async () => {
-  //     try {
-  //       const res = api.get(PUBLIC_HOLIDAYS_ENDPOINT)
-  //       console.log(`Fetchec Calendar`, res)
-  //     }
-  //     catch (error) {
-  //       console.log(`Error Fetching calendar:`, error);
-  //     }
-  //   }
-  //   fetchedCalendar();
-  // }, [selectedCountry])
 
-  const handleCountryChange = (e) => {
-    setSelectedCountry(e.target.value)
+  const fetchedCalendar = async (isoCode, language) => {
+    try {
+      const res = await api.get(`${PUBLIC_HOLIDAYS_ENDPOINT}?countryIsoCode=${isoCode}&validFrom=2023-01-01&validTo=2023-12-31&languageIsoCode=${language}`)
+      console.log(`Fetchec Calendar`, res.data)
+
+      const holidaysFetched = []
+
+      res.data.forEach((item) => {
+        item.name.forEach((holiday) => {
+          holidaysFetched.push({
+            language: holiday.language,
+            holiday: holiday.text,
+            startDate: item.startDate,
+            endDate: item.endDate,
+            id: item.id
+          })
+        })
+      })
+
+      console.log('holidaysFetched', holidaysFetched)
+      setPublicHolidays(holidaysFetched)
+
+    }
+    catch (error) {
+      console.log(`Error Fetching calendar:`, error);
+    }
   }
+  console.log(publicHolidays)
+  const handleCountryChange = (e) => {
+    const selecIsoCode = e.target.value
+    const selectedCountryObject = countryOptions.find(item => item.isoCode === selecIsoCode)
+    const selectedLanguage = selectedCountryObject?.language || 'EN';
+    setSelectedCountry(selecIsoCode)
+    fetchedCalendar(selecIsoCode, selectedLanguage)
+  }
+
 
   return (
     <>
@@ -74,11 +99,22 @@ function App() {
       <select name="select country" value={selectedCountry} onChange={handleCountryChange}>
         {
           countryOptions.map((option, index) => (
-            <option key={index} value={option.text}>{option.text}</option>
+            <option key={index} value={option.isoCode}>{option.text} ({option.language})</option>
           )
           )
         }
       </select>
+      <br />
+      <br />
+      <h3>Public Holidays</h3>
+      {publicHolidays.map((option) => (
+        <div key={option.id}>
+          <span>{option.startDate}</span> - <span>{option.holiday}</span> - <span>{option.endDate}</span>
+        </div>)
+      )
+      }
+
+
     </>
   )
 }

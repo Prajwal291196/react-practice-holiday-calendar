@@ -6,7 +6,7 @@ import axios from 'axios'
 import api, { COUNTRY_ENDPOINT, PUBLIC_HOLIDAYS_ENDPOINT } from './api'
 
 function App() {
-  const [selectedCountry, setSelectedCountry] = useState('NL')
+  const [selectedCountry, setSelectedCountry] = useState({isoCode:'NL',language:'NL'})
   const [countryOptions, setCountryOptions] = useState([])
   const [publicHolidays, setPublicHolidays] = useState([])
 
@@ -51,7 +51,7 @@ function App() {
       }
     }
     fetchOpenHolidays();
-    fetchedCalendar('NL','NL')
+    fetchedCalendar('NL', 'NL')
   }, [])
   console.log(`countryOptions`, countryOptions)
 
@@ -83,23 +83,21 @@ function App() {
       console.log(`Error Fetching calendar:`, error);
     }
   }
-  console.log(publicHolidays)
+  console.log('publicHolidays', publicHolidays)
   const handleCountryChange = (e) => {
-    const selecIsoCode = e.target.value
-    const selectedCountryObject = countryOptions.find(item => item.isoCode === selecIsoCode)
-    const selectedLanguage = selectedCountryObject?.language || 'EN';
-    setSelectedCountry(selecIsoCode)
-    fetchedCalendar(selecIsoCode, selectedLanguage)
+    const [selectedIsoCode, selectedLanguage] = e.target.value.split('-');
+    setSelectedCountry({ isoCode: selectedIsoCode, language: selectedLanguage })
+    fetchedCalendar(selectedIsoCode, selectedLanguage)
   }
 
 
   return (
     <>
       <h2>Country Selector</h2>
-      <select name="select country" value={selectedCountry} onChange={handleCountryChange}>
+      <select name="select country" value={`${selectedCountry.isoCode}-${selectedCountry.language}`} onChange={handleCountryChange}>
         {
           countryOptions.map((option, index) => (
-            <option key={index} value={option.isoCode}>{option.text} ({option.language})</option>
+            <option key={index} value={`${option.isoCode}-${option.language}`}>{option.text} ({option.language})</option>
           )
           )
         }

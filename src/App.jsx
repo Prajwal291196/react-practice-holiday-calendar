@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import axios from 'axios'
-import api, { COUNTRY_ENDPOINT } from './api'
+import api, { COUNTRY_ENDPOINT, PUBLIC_HOLIDAYS_ENDPOINT } from './api'
 
 function App() {
   const [selectedCountry, setSelectedCountry] = useState('Netherlands (the)')
@@ -24,11 +24,12 @@ function App() {
           country.name.forEach((item) => {
             allCountyName.push({
               text: item.text,
-              language: item.language
+              language: item.language,
+              isoCode: country.isoCode
             });
           });
         });
-        console.log(allCountyName)
+        console.log(`All country Names`, allCountyName)
 
         const unique = Array.from(
           new Map(
@@ -49,8 +50,21 @@ function App() {
     fetchOpenHolidays();
   }, [])
   console.log(`countryOptions`, countryOptions)
- 
-  const handleCountryChange = (e) =>{
+
+  // useEffect(() => {
+  //   const fetchedCalendar = async () => {
+  //     try {
+  //       const res = api.get(PUBLIC_HOLIDAYS_ENDPOINT)
+  //       console.log(`Fetchec Calendar`, res)
+  //     }
+  //     catch (error) {
+  //       console.log(`Error Fetching calendar:`, error);
+  //     }
+  //   }
+  //   fetchedCalendar();
+  // }, [selectedCountry])
+
+  const handleCountryChange = (e) => {
     setSelectedCountry(e.target.value)
   }
 
